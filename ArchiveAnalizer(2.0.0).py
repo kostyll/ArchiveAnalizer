@@ -146,17 +146,18 @@ class main(QtGui.QMainWindow):
                     self.threadManager.logging = logging
                     self.threadManager.start()
 
-
     def finishProcess(self):
         """
         Слот для окончания работы потока основного процесса.
         """
+        self.progress(100)
         if self.threadManager.error:
             self.addLogError(u"<b>%s</b>" % self.threadManager.errorMessage)
             ksqt.message(self, "error", u"Ошибка...", u"В процессе работы программы произошли ошибки:<br>%s" % self.threadManager.errorMessage)
         else:
             self.addLogOk(u"<b>Выполнено!</b>")
         self.formDisabled(False)
+
 
 
 if __name__ == '__main__':
