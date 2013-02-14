@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Список системных утилит.
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 
 
 def message(parent, type_, title, text):

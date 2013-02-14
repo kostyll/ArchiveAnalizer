@@ -32,7 +32,7 @@ class main(QtGui.QMainWindow):
         self.connect(self.threadManager, QtCore.SIGNAL("information(QString)"), self.addLogInform, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("progress(QString)"), self.progress, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("started()"), lambda: self.formDisabled(True))
-        self.connect(self.threadManager, QtCore.SIGNAL("finished()"), lambda: self.formDisabled(False))
+        self.connect(self.threadManager, QtCore.SIGNAL("finished()"), self.finishProcess)
 
     def progress(self, num):
         """
@@ -45,7 +45,13 @@ class main(QtGui.QMainWindow):
         """
         Вывод сообщения в информационное окно.
         """
-        self.ui.textEdit.append(message)
+        self.ui.textEdit.append('<span style="color: #505050">%s</span>' % message)
+
+    def addLogOk(self, message):
+        """
+        Вывод положительного результата в информационное окно.
+        """
+        self.ui.textEdit.append('<span style="color: #009100">%s</span>' % message)
 
     def addLogWarning(self, message):
         """
@@ -134,9 +140,23 @@ class main(QtGui.QMainWindow):
                     ksqt.message(self, "inform", u"Информация", u"Видео архив пуст.")
                 else:
                     # Запускаем менеджер обработки данных.
+                    self.threadManager.clean()
                     self.threadManager.archDisk = archDisk
                     self.threadManager.dirList = dirList
+                    self.threadManager.logging = logging
                     self.threadManager.start()
+
+
+    def finishProcess(self):
+        """
+        Слот для окончания работы потока основного процесса.
+        """
+        if self.threadManager.error:
+            self.addLogError(u"<b>%s</b>" % self.threadManager.errorMessage)
+            ksqt.message(self, "error", u"Ошибка...", u"В процессе работы программы произошли ошибки:<br>%s" % self.threadManager.errorMessage)
+        else:
+            self.addLogOk(u"<b>Выполнено!</b>")
+        self.formDisabled(False)
 
 
 if __name__ == '__main__':
