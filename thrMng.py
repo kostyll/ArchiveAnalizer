@@ -5,6 +5,7 @@
 from PyQt4 import QtCore
 from thrAnaliz import ThrAnaliz
 import sqlite3
+import Queue
 
 
 class ThrMng(QtCore.QThread):
@@ -23,12 +24,13 @@ class ThrMng(QtCore.QThread):
     dbCursos = None  # Текущий курсор базы данных.
     tableName = "archiv"  # Имя таблицы.
     addSqlError = False  # Ключ ошибки добавления в базу данных.
+    sqlQueue = Queue.Queue()  # Очередь для добавления данных в БД.
 
     def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.thrAnaliz = ThrAnaliz()  # Класс анализатора архива.
         self.connect(self.thrAnaliz, QtCore.SIGNAL("progress2(QString)"), self.progress2, QtCore.Qt.QueuedConnection)
-        self.connect(self.thrAnaliz, QtCore.SIGNAL("sql2(QString)"), self.addSql)
+        self.connect(self.thrAnaliz, QtCore.SIGNAL("sql2(QString)"), self.addSql, QtCore.Qt.QueuedConnection)
 
     def progress2(self, num):
         """
@@ -44,7 +46,7 @@ class ThrMng(QtCore.QThread):
         """
         try:
             self.mutex.lock()
-            self.dbCursor.execute(sql)
+            self.dbCursor.execute(str(sql))
             self.dbConnect.commit()
         except Exception, e:
             self.thrAnaliz.chancel = True
@@ -112,7 +114,6 @@ class ThrMng(QtCore.QThread):
         """
         return "backup.sql"
 
-
     def run(self):
         self.emit(QtCore.SIGNAL("progress(QString)"), str(0))
         if not self.archDisk or not self.dirList:
@@ -122,13 +123,12 @@ class ThrMng(QtCore.QThread):
             # Подключение к базе данных.
             self.logging.debug(u"Connect db.")
             try:
-                self.dbConnect =sqlite3.connect(":memory:")
+                self.dbConnect =sqlite3.connect(":memory:", check_same_thread = False)
                 self.dbCursor = self.dbConnect.cursor()
                 self.createTable(self.dbCursor, self.tableName)
             except Exception, e:
                 self.errorMsg(u"Ошибка подключение к базе sqlite: %s" % unicode(e))
             else:
-                tA = self.thrAnaliz  # Просто сокращение.
                 # Запускаем поток анализа архива.
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(1))
                 self.emit(QtCore.SIGNAL("information(QString)"), u"Сбор данных о файлах архива... ")
@@ -137,12 +137,24 @@ class ThrMng(QtCore.QThread):
                 self.thrAnaliz.archDisk = self.archDisk
                 self.thrAnaliz.dirList = self.dirList
                 self.thrAnaliz.logging = self.logging
+                self.thrAnaliz.tableName = self.tableName
+                self.thrAnaliz.sqlQueue = self.sqlQueue
                 self.thrAnaliz.start()
-                self.thrAnaliz.wait()
-                QtCore.QThread.sleep(2)
+                #self.thrAnaliz.wait()
+                while True:
+                    self.time(1)
+                    if not self.thrAnaliz.isRunning() and self.thrAnaliz.isFinished() and self.sqlQueue.empty():
+                        break
+                    else:
+                        while True:
+                            try:
+                                sql = self.sqlQueue.get_nowait()
+                                self.addSql(sql)
+                            except Queue.Empty:
+                                break
                 self.logging.debug(u"FINISH: ThrAnaliz")
-                if tA.error:
-                    self.errorMsg(tA.errorMessage)
+                if self.thrAnaliz.error:
+                    self.errorMsg(self.thrAnaliz.errorMessage)
                 else:
                     # Создание бэкапа базы данных:
                     self.emit(QtCore.SIGNAL("information(QString)"), u"Создание бэкапа базы данных на диск... ")

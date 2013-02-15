@@ -18,6 +18,8 @@ class ThrAnaliz(QtCore.QThread):
     error = False  # Ключ ошибки в работе программы.
     errorMessage = u""  # Сообщение об ошибки.
     chancel = False  # Ключ завершения работы потока.
+    tableName = ""  # Имя таблицы базы данных.
+    sqlQueue = None  # Очередь для добавления данных в БД.
 
     def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
@@ -41,6 +43,8 @@ class ThrAnaliz(QtCore.QThread):
         self.dbCursor = None
         self.error = False
         self.errorMessage = u""
+        self.tableName = ""
+        self.sqlQueue = None
 
     def run(self):
         # Чтение файлов в директория.
@@ -54,7 +58,7 @@ class ThrAnaliz(QtCore.QThread):
                     fileFullPath = "%s:\\VIDEO\\%s\\%s" % (self.archDisk, archPath, archFile)  # Путь и имя файла.
                     sql = """
                         INSERT INTO
-                            archiv_info
+                            %s
                         VALUES
                             (
                                 NULL,
@@ -69,6 +73,7 @@ class ThrAnaliz(QtCore.QThread):
                                 '%s'
                             )
                     """ % (
+                        self.tableName,
                         fileFullPath,
                         self.archDisk,
                         ksitv.getDateFromPath(archPath),
@@ -79,20 +84,14 @@ class ThrAnaliz(QtCore.QThread):
                         "",
                         ""
                     )
-#                    try:
-#                        self.dbCursor.execute(sql)
-#                    except Exception, e:
-#                        self.errorMsg(u"Ошибка добавления данных в базу данных: %s" % e)
-#                        exit()
                     if self.chancel:
-                        print "EXIT"
                         exit()
-                    self.emit(QtCore.SIGNAL("sql2(QString)"), sql)
-                    print sql
-
+                    else:
+                        self.sqlQueue(sql, block=True)
+                        #self.emit(QtCore.SIGNAL("sql2(QString)"), sql)
                 self.emit(QtCore.SIGNAL("progress2(QString)"), str(cntCurrent))
                 cntCurrent += 1
-            self.emit(QtCore.SIGNAL("progress2(QString)"), str(100))
+            #self.emit(QtCore.SIGNAL("progress2(QString)"), str(100))
 
 
 
