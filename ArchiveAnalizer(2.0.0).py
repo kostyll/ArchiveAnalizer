@@ -7,8 +7,6 @@ import sys
 from ui.ui_main import Ui_main
 from PyQt4 import QtCore, QtGui
 from kstools import kssys, ksitv, ksqt
-#import sqlite3
-#import re
 import logging
 from thrMng import ThrMng
 
@@ -18,6 +16,10 @@ class main(QtGui.QMainWindow):
     Класс основной формы
     """
 
+    tableName = "archiv"  # Имя таблицы.
+    cacheDir = "cache"  # Директория для кэширования.
+    outDir = "out"  # Диретория для выходных файлов.
+    cacheFile = ""  # Имя фафйла с резервной копией базы данных.
 
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -79,13 +81,13 @@ class main(QtGui.QMainWindow):
         Блокировка / разблокировка формы.
         """
         elements = (
-            self.ui.pushButton,
             self.ui.pushButton_2,
             self.ui.pushButton_3,
             self.ui.pushButton_4,
             self.ui.checkBox,
+            self.ui.checkBox_2,
             self.ui.checkBox_3,
-            self.ui.radioButton,
+            self.ui.radioButton_2,
             )
         for item in elements:
             if disabled:
@@ -98,17 +100,18 @@ class main(QtGui.QMainWindow):
         Очистка пути к файлу с базой.
         """
         self.ui.lineEdit.setText(u"")
+        self.cacheFile = ""
+
 
     def clickOpenFileDialog(self):
         """
         Диалог выбора файла с внешней базой данных.
         """
-        self.formDisabled()
-        dirName = "d:\\"
+        dirName = "%s/%s" % (self.baseDir, self.cacheDir)
         fileName = QtGui.QFileDialog().getOpenFileName(self, u"Выберите .sql файл...", directory=dirName, filter="*.sql")
         if fileName:
-            print fileName
             self.ui.lineEdit.setText(fileName)
+            self.cacheFile = fileName
 
     def clickProcess(self):
         """
@@ -140,11 +143,31 @@ class main(QtGui.QMainWindow):
                     ksqt.message(self, "inform", u"Информация", u"Видео архив пуст.")
                 else:
                     # Запускаем менеджер обработки данных.
-                    self.threadManager.clean()
+                    self.threadManager.initialize()
                     self.threadManager.archDisk = archDisk
                     self.threadManager.dirList = dirList
                     self.threadManager.logging = logging
-                    self.threadManager.start()
+                    self.threadManager.workDir = self.baseDir
+                    self.threadManager.tableName = self.tableName
+                    self.threadManager.cacheDir = self.cacheDir
+                    self.threadManager.outDir = self.outDir
+                    self.threadManager.cacheFile = self.cacheFile
+                    if self.ui.checkBox_4.checkState() == QtCore.Qt.Checked:
+                        self.threadManager.runAfterComplete = True
+                    checked = 0  # Колличество выбранныз отчетов.
+                    if self.ui.checkBox_2.checkState() == QtCore.Qt.Checked:
+                        self.threadManager.report.append("all_day")
+                        checked += 1
+                    if self.ui.checkBox.checkState() == QtCore.Qt.Checked:
+                        self.threadManager.report.append("cam_in_day")
+                        checked += 1
+                    if self.ui.checkBox_3.checkState() == QtCore.Qt.Checked:
+                        self.threadManager.report.append("cam_in_hour")
+                        checked += 1
+                    if not checked:
+                        ksqt.message(self, "warning", u"Внимание", u"Необходимо выбрать хотя бы один отчёт.")
+                    else:
+                        self.threadManager.start()
 
     def finishProcess(self):
         """
@@ -155,9 +178,11 @@ class main(QtGui.QMainWindow):
             self.addLogError(u"<b>%s</b>" % self.threadManager.errorMessage)
             ksqt.message(self, "error", u"Ошибка...", u"В процессе работы программы произошли ошибки:<br>%s" % self.threadManager.errorMessage)
         else:
-            self.addLogOk(u"<b>Выполнено!</b>")
+            if not self.threadManager.normalExit:
+                self.addLogError(u"<b>Некорректное завершение работы программы.</b>")
+            else:
+                self.addLogOk(u"<b>Выполнено!</b>")
         self.formDisabled(False)
-
 
 
 if __name__ == '__main__':

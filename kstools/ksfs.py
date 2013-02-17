@@ -5,7 +5,7 @@
 import os
 import shutil
 from win32com.client import GetObject
-import kstools
+import ksprocent
 
 
 def copyTree(src, dst):
@@ -68,14 +68,17 @@ def getNumberFormat(num, unit):
     if not num:
         result = ""
     else:
-        if unit == "byte":  # Отображение в байтах:
+        if unit == "byte" or unit == "b":  # Отображение в байтах:
             result = num  # Словарь с доступными камерами.
-        elif unit == "mbyte":  # Отображение в мегабайтах:
+        elif unit == "mbyte" or unit == "mb":  # Отображение в мегабайтах:
             result = num / 1000000   # Словарь с доступными камерами.
-        elif unit == "human":  # Отображение в человекопонятном виде:
-            result = self.convert_bytes(num)
+        elif unit == "human" or unit == "h":  # Отображение в человекопонятном виде:
+            result = convertBytes(num)
         else:  # Неописанный тип:
             raise Exception(u"Передан неописанный тип представления: %s" % unit)
+    # Проверяем на округления 0:
+    if num > 0 and result == 0:
+        result = 1
     return result
 
 def getDiskSizeTotal(diskLeter):
@@ -126,4 +129,4 @@ def getDiskSizeFreeProcent(diskLetter):
     """
     diskTotal = getDiskSizeTotal(diskLetter)
     diskFree = getDiskSizeFree(diskLetter)
-    return kstools.getProcent(diskTotal, diskFree)
+    return ksprocent.get(diskTotal, diskFree)
