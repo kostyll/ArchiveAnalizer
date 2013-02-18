@@ -4,6 +4,8 @@
 
 .idea
 
+*.sql
+*.exe
 
 #################
 ## Eclipse

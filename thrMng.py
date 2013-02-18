@@ -10,6 +10,9 @@ import os
 import sys
 import xlwt
 import socket
+import sqlite3.dump
+
+
 
 class ThrMng(QtCore.QThread):
     """
@@ -194,6 +197,15 @@ class ThrMng(QtCore.QThread):
             sys.exit()
         return result
 
+    def chancelExit(self):
+        """
+        Принудительная остановка работы программы.
+        """
+        self.emit(QtCore.SIGNAL("progress(QString)"), str(100))
+        self.emit(QtCore.SIGNAL("information(QString)"), u"<b>Принудительная остановка работы программы.</b>")
+        self.normalExit = True
+        sys.exit()
+
     def run(self):
         self.logging.debug(u"START: ThrMng")
         curProcent = 0
@@ -206,6 +218,7 @@ class ThrMng(QtCore.QThread):
             self.logging.debug(u"Connect db.")
             try:
                 dbConnect =sqlite3.connect(":memory:")
+                #dbConnect =sqlite3.connect("xxx.sqlite")
                 dbCursor = dbConnect.cursor()
                 self.deleteTable(dbCursor, self.tableName)
             except Exception, e:
@@ -271,8 +284,7 @@ class ThrMng(QtCore.QThread):
                                     "",
                                     )
                                 if self.chancel:
-                                    self.errorMsg(u"Прервано пользователем.")
-                                    sys.exit()
+                                    self.chancelExit()
                                 else:
                                     try:
                                         dbCursor.execute(sql)
@@ -292,7 +304,7 @@ class ThrMng(QtCore.QThread):
                         self.logging.debug(u"START: DB backup")
                         try:
                             path = self.getDbFileNameBackup()
-                            if not os.path.exists(path):
+                            if not os.path.exists(os.path.dirname(path)):
                                 os.mkdir(os.path.dirname(path))
                             with open(path, 'w') as f:
                                 for line in dbConnect.iterdump():
@@ -308,6 +320,14 @@ class ThrMng(QtCore.QThread):
                 curProcent = 85
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 wb = xlwt.Workbook()
+                # Создание директории для отчетов:
+                outDir = "%s/%s" % (self.workDir, self.outDir)
+                try:
+                    if not os.path.exists(outDir):
+                        os.mkdir(outDir)
+                except Exception, e:
+                    self.errorMsg(u"Ошибка создания директории \"%s\": %s" % (outDir, e))
+                    sys.exit()
                 if "all_day" in self.report: # Отчет за все камеры в день:
                     self.logging.debug(u"START: report all_day")
                     self.emit(QtCore.SIGNAL("information(QString)"), u"Создание отчета за дни... ")
@@ -326,6 +346,8 @@ class ThrMng(QtCore.QThread):
                         col =+ 1
                         ws.write(row, col, ksfs.getNumberFormat(sizeInDays[day], "mb"))
                         row += 1
+                        if self.chancel:  # Принудительный выход:
+                            self.chancelExit()
                     self.logging.debug(u"FINISH: report all_day")
                     self.emit(QtCore.SIGNAL("information(QString)"), u"&nbsp;&nbsp;&nbsp;... создан.")
                     curProcent = 88
@@ -348,8 +370,13 @@ class ThrMng(QtCore.QThread):
                         ws.write(row, col, day)
                         col += 1
                         for cam in cams:
-                            ws.write(row, col, ksfs.getNumberFormat(size[cam], "mb"))
+                            try:
+                                ws.write(row, col, ksfs.getNumberFormat(size[cam], "mb"))
+                            except Exception:
+                                pass
                             col += 1
+                            if self.chancel:  # Принудительный выход:
+                                self.chancelExit()
                         row += 1
                     self.logging.debug(u"FINISH: report Cam in day")
                     self.emit(QtCore.SIGNAL("information(QString)"), u"&nbsp;&nbsp;&nbsp;... создан.")
@@ -375,12 +402,16 @@ class ThrMng(QtCore.QThread):
                             resultTable[day][hour] = {}
                             for cam in cams:  # Прозод по камерам:
                                 resultTable[day][hour][cam] = None
+                                if self.chancel:  # Принудительный выход:
+                                    self.chancelExit()
                     # Формирование результата:
                     for date in resultTable.keys():  # Проход по дамам:
                         for hour in resultTable[date].keys():  # Проход по часам:
                             sizeInHour = self.getSizeInHour(dbCursor, date, hour)
                             for req in sizeInHour.keys():
                                 resultTable[date][hour][req] = sizeInHour[req]
+                                if self.chancel:  # Принудительный выход:
+                                    self.chancelExit()
                     # Сохранение результата:
                     for date in sorted(resultTable.keys()):  # Проход по дамам:
                         for hour in sorted(resultTable[date].keys()):  # Проход по часам:
@@ -390,6 +421,8 @@ class ThrMng(QtCore.QThread):
                             for cam in sorted(resultTable[date][hour].keys()):
                                 ws.write(row, col, ksfs.getNumberFormat(resultTable[date][hour][cam], "mb"))
                                 col += 1
+                                if self.chancel:  # Принудительный выход:
+                                    self.chancelExit()
                             row += 1
                     self.logging.debug(u"FINISH: report Cam in hour")
                     self.emit(QtCore.SIGNAL("information(QString)"), u"&nbsp;&nbsp;&nbsp;... создан.")
@@ -404,7 +437,7 @@ class ThrMng(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 # Просмотреть отчёт:
                 if self.runAfterComplete:
-                    os.system(self.getReportXlsFileName())
+                    os.startfile(self.getReportXlsFileName())
             dbConnect.close()
             self.logging.debug(u"FINISH: ThrMgr")
             self.normalExit = True
