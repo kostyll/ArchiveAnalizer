@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Работа с корфигурацией сохраняемой на диск.
-
+# v. 1.0.0 2013.02.19
 
 from configobj import ConfigObj
 import logging

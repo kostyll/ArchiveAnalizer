@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Работа с HEX данными.
-
+# v. 1.0.0 2013.02.19
 
 def toIntLite(hex1, hex2=None):
     """

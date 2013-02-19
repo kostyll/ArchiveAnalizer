@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # Список системных утилит.
+# v. 1.0.0 2013.02.19
 
 from PyQt4 import QtGui
 

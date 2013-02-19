@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>main</class>
  <widget class="QMainWindow" name="main">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -18,6 +21,10 @@
   </property>
   <property name="windowTitle">
    <string>Анализа архива</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="iconres.qrc">
+    <normaloff>:/title-icon/icons/icon.png</normaloff>:/title-icon/icons/icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -100,39 +107,13 @@
           </size>
          </property>
          <property name="title">
-          <string>Формат выхода</string>
+          <string>Данные</string>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
+         <layout class="QGridLayout" name="gridLayout_5">
           <property name="margin">
            <number>3</number>
           </property>
-          <item>
-           <widget class="QRadioButton" name="radioButton">
-            <property name="enabled">
-             <bool>false</bool>
-            </property>
-            <property name="text">
-             <string>CSV</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="radioButton_2">
-            <property name="enabled">
-             <bool>true</bool>
-            </property>
-            <property name="text">
-             <string>XLS</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
+          <item row="2" column="0">
            <spacer name="verticalSpacer">
             <property name="orientation">
              <enum>Qt::Vertical</enum>
@@ -144,6 +125,67 @@
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QPushButton" name="pushButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>24</height>
+             </size>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="autoFillBackground">
+             <bool>false</bool>
+            </property>
+            <property name="text">
+             <string>Кэш базы    </string>
+            </property>
+            <property name="icon">
+             <iconset resource="iconres.qrc">
+              <normaloff>:/title-icon/icons/folder.png</normaloff>:/title-icon/icons/folder.png</iconset>
+            </property>
+            <property name="checkable">
+             <bool>false</bool>
+            </property>
+            <property name="autoRepeat">
+             <bool>false</bool>
+            </property>
+            <property name="autoDefault">
+             <bool>false</bool>
+            </property>
+            <property name="flat">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QPushButton" name="pushButton_5">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="layoutDirection">
+             <enum>Qt::LeftToRight</enum>
+            </property>
+            <property name="text">
+             <string>Результаты</string>
+            </property>
+            <property name="icon">
+             <iconset resource="iconres.qrc">
+              <normaloff>:/title-icon/icons/folder.png</normaloff>:/title-icon/icons/folder.png</iconset>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -271,9 +313,23 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuTop">
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="action"/>
+   </widget>
+   <addaction name="menuTop"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="action">
+   <property name="text">
+    <string>О программе</string>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="iconres.qrc"/>
+ </resources>
  <connections/>
 </ui>

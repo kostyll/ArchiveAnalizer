@@ -12,7 +12,6 @@ import logging
 from thrMng import ThrMng
 
 
-
 class main(QtGui.QMainWindow):
     """
     Класс основной формы
@@ -23,6 +22,7 @@ class main(QtGui.QMainWindow):
     outDir = "out"  # Диретория для выходных файлов.
     cacheFile = ""  # Имя фафйла с резервной копией базы данных.
     isProcess = False  # Программа находится в процессе работы.
+    # Иконка заголовка окнна:
     configDefault = {  # Конфигурация программы по умолчанию.
         "report_in_day": True,
         "report_cam_in_day": True,
@@ -38,16 +38,53 @@ class main(QtGui.QMainWindow):
         self.baseDir = kssys.getWorkPath()  # Рабочая директория программы.
         self.threadManager = ThrMng()  # Поток менеджера обработки данных.
         # Слоты.
+        self.ui.pushButton.clicked.connect(self.clickOpenCacheFolder)  # Открытие папки с кэшэм базы.
         self.ui.pushButton_2.clicked.connect(self.clickOpenFileDialog)  # Диалог выбора файла.
         self.ui.pushButton_3.clicked.connect(self.clickProcess)  # Начало процесса создания отчетов.
         self.ui.pushButton_4.clicked.connect(self.clickClearFileLine)  # Очистка поля выбора внешнего файла.
+        self.ui.pushButton_5.clicked.connect(self.clickOpenOutFolder)  # Открытие папки с выходными файлами.
+
+        self.ui.action.triggered.connect(self.clickOpenOutFolder)  # Открытие папки с выходными файлами.
+
         self.connect(self.threadManager, QtCore.SIGNAL("information(QString)"), self.addLogInform, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("progress(QString)"), self.progress, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("started()"), lambda: self.formDisabled(True))
         self.connect(self.threadManager, QtCore.SIGNAL("finished()"), self.finishProcess)
+
+
         # Конфигурация:
         self.config = ksconfig.KsConfig(self.baseDir, "config.ini", self.configDefault, True)
         self.configToForm()
+        # Создание необходимых для работы папок:
+        try:
+            if not os.path.exists("%s/%s" % (self.baseDir, self.outDir)):
+                os.mkdir("%s/%s" % (self.baseDir, self.outDir))
+            if not os.path.exists("%s/%s" % (self.baseDir, self.cacheDir)):
+                os.mkdir("%s/%s" % (self.baseDir, self.cacheDir))
+        except Exception, e:
+            ksqt.message(self, "error", u"Ошибка...", u"Невозможно создать директорию: %s" % unicode(e.__str__(), 'cp1251'))
+            sys.exit(1)
+
+    def clickOpenCacheFolder(self):
+        """
+        Открыть папку с кэшем.
+        """
+        path = "%s/%s" % (self.baseDir, self.cacheDir)
+        try:
+            os.startfile(path)
+        except Exception, e:
+            ksqt.message(self, "error", u"Ошибка...", u"Не удаётся открыть папку %s<br>%s" % (path, unicode(e.__str__(), "cp1251")))
+
+    def clickOpenOutFolder(self):
+        """
+        Открыть папку с выходными файлами.
+        """
+        path = "%s/%s" % (self.baseDir, self.outDir)
+        try:
+            os.startfile(path)
+        except Exception, e:
+            ksqt.message(self, "error", u"Ошибка...", u"Не удаётся открыть папку %s<br>%s" % (path, unicode(e.__str__(), "cp1251")))
+
 
     def closeEvent(self, *args, **kwargs):
         """
@@ -147,12 +184,13 @@ class main(QtGui.QMainWindow):
         Блокировка / разблокировка формы.
         """
         elements = (
+            self.ui.pushButton,
             self.ui.pushButton_2,
             self.ui.pushButton_4,
+            self.ui.pushButton_5,
             self.ui.checkBox,
             self.ui.checkBox_2,
             self.ui.checkBox_3,
-            self.ui.radioButton_2,
             )
         for item in elements:
             if disabled:
@@ -165,14 +203,12 @@ class main(QtGui.QMainWindow):
         else:
             self.ui.pushButton_3.setText(u"Сформировать")
 
-
     def clickClearFileLine(self):
         """
         Очистка пути к файлу с базой.
         """
         self.ui.lineEdit.setText(u"")
         self.cacheFile = ""
-
 
     def clickOpenFileDialog(self):
         """

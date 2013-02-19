@@ -437,7 +437,11 @@ class ThrMng(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 # Просмотреть отчёт:
                 if self.runAfterComplete:
-                    os.startfile(self.getReportXlsFileName())
+                    try:
+                        os.startfile(self.getReportXlsFileName())
+                    except Exception, e:
+                        self.errorMsg(u"Ошибка запуска программы для просмотра результирующего файла: %s" % unicode(e.__str__(), "cp1251"))
+                        sys.exit()
             dbConnect.close()
             self.logging.debug(u"FINISH: ThrMgr")
             self.normalExit = True
