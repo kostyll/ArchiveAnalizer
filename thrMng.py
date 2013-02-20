@@ -19,6 +19,8 @@ class ThrMng(QtCore.QThread):
     При возникновенни ошибки в процессе работы потока, заполняются переменные error и errorMessage.
     """
 
+    cfg = None  # Конфигурация программы.
+
     def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.initialize()

@@ -7,15 +7,21 @@ import sys
 import os
 from ui.ui_main import Ui_main
 from PyQt4 import QtCore, QtGui
-from kstools import kssys, ksitv, ksqt, ksconfig
+from kstools import kssys, ksitv, ksqt, ksconfig, ksenv
 import logging
 from thrMng import ThrMng
+import lya
 
 
 class main(QtGui.QMainWindow):
     """
     Класс основной формы
     """
+
+    cfgAppName = "IntellectArchiveAnalizer"  # Имя приложения для создания рабочих папок.
+    cfgDefaultFileName = "cfg_default.yaml"  # Имя файла конфигурации по умолчанию.
+    cfgUserFilename = "cfg_user.yaml"  # Имя фалйа конфигурации пользоателя по умолчанию.
+
 
     tableName = "archiv"  # Имя таблицы.
     cacheDir = "cache"  # Директория для кэширования.
@@ -55,6 +61,11 @@ class main(QtGui.QMainWindow):
         # Конфигурация:
         self.config = ksconfig.KsConfig(self.baseDir, "config.ini", self.configDefault, True)
         self.configToForm()
+
+        self.cfg = lya.AttrDict.from_yaml(os.path.join(self.baseDir, self.cfgDefaultFileName))
+
+
+
         # Создание необходимых для работы папок:
         try:
             if not os.path.exists("%s/%s" % (self.baseDir, self.outDir)):

@@ -1,0 +1,23 @@
+main:
+  # секция значений создания отчетов
+  report:
+    in_day: False
+    cam_in_day: False
+    cam_in_hour: False
+  # секция для доступа к кэш-бэкапам
+  backup:
+    file:
+  # прочие триггеры
+  triggers:
+    exec_after_create: True
+  # рабочие директории
+  dir:
+    out: "out"
+    cache: "cache"
+  # настройка БД
+  db:
+    base: ":memory:"
+    table: "archiv"
+
+
+
