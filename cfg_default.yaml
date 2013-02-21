@@ -6,7 +6,7 @@ main:
     cam_in_hour: False
   # секция для доступа к кэш-бэкапам
   backup:
-    file:
+    file: ""
   # прочие триггеры
   triggers:
     exec_after_create: True

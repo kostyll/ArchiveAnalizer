@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_main.ui'
 #
-# Created: Thu Feb 21 17:13:51 2013
+# Created: Thu Feb 21 22:17:38 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_main(object):
     def setupUi(self, main):
         main.setObjectName(_fromUtf8("main"))
         main.setEnabled(True)
-        main.resize(316, 346)
+        main.resize(310, 363)
         main.setMaximumSize(QtCore.QSize(16777215, 16777215))
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(_fromUtf8(":/title-icon/icons/icon.png")), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -59,8 +59,6 @@ class Ui_main(object):
         self.checkBox_2.setChecked(True)
         self.checkBox_2.setObjectName(_fromUtf8("checkBox_2"))
         self.gridLayout_2.addWidget(self.checkBox_2, 0, 0, 1, 1)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.gridLayout_2.addItem(spacerItem, 3, 0, 1, 1)
         self.gridLayout.addWidget(self.groupBox, 0, 0, 1, 1)
         self.groupBox_2 = QtGui.QGroupBox(self.widget)
         self.groupBox_2.setMinimumSize(QtCore.QSize(100, 0))
@@ -69,8 +67,6 @@ class Ui_main(object):
         self.gridLayout_5 = QtGui.QGridLayout(self.groupBox_2)
         self.gridLayout_5.setMargin(3)
         self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
-        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.gridLayout_5.addItem(spacerItem1, 3, 0, 1, 1)
         self.pushButton = QtGui.QPushButton(self.groupBox_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -103,6 +99,11 @@ class Ui_main(object):
         self.gridLayout.addWidget(self.groupBox_2, 0, 1, 1, 1)
         self.verticalLayout.addWidget(self.widget)
         self.widget_2 = QtGui.QWidget(self.centralwidget)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
+        self.widget_2.setSizePolicy(sizePolicy)
         self.widget_2.setObjectName(_fromUtf8("widget_2"))
         self.gridLayout_3 = QtGui.QGridLayout(self.widget_2)
         self.gridLayout_3.setMargin(3)
@@ -151,6 +152,11 @@ class Ui_main(object):
         self.verticalLayout_3.setMargin(3)
         self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
         self.textEdit = QtGui.QTextEdit(self.groupBox_3)
+        sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.textEdit.sizePolicy().hasHeightForWidth())
+        self.textEdit.setSizePolicy(sizePolicy)
         self.textEdit.setLineWrapMode(QtGui.QTextEdit.NoWrap)
         self.textEdit.setReadOnly(True)
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
@@ -158,7 +164,7 @@ class Ui_main(object):
         self.verticalLayout.addWidget(self.groupBox_3)
         main.setCentralWidget(self.centralwidget)
         self.menubar = QtGui.QMenuBar(main)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 316, 21))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 310, 21))
         self.menubar.setObjectName(_fromUtf8("menubar"))
         self.menuTop = QtGui.QMenu(self.menubar)
         self.menuTop.setObjectName(_fromUtf8("menuTop"))
@@ -188,6 +194,7 @@ class Ui_main(object):
         self.pushButton_5.setText(_translate("main", "Результаты", None))
         self.pushButton_2.setText(_translate("main", "Выбрать файл базы", None))
         self.pushButton_4.setText(_translate("main", "-", None))
+        self.pushButton_3.setWhatsThis(_translate("main", "<html><head/><body><p><br/></p></body></html>", None))
         self.pushButton_3.setText(_translate("main", "Сформировать", None))
         self.checkBox_5.setText(_translate("main", "каждый кэш сохранять в отдельный файл.", None))
         self.checkBox_4.setText(_translate("main", "открыть файл после окончания его формирования.", None))
