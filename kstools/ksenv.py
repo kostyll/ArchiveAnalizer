@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Работа с переменными окружения.
-# v. 1.0.0 2013.02.20
+# v. 1.1.0 2013.02.20
 #
 # Для получения путей к настройкам программы в ОС Windows:
 #
@@ -51,3 +51,26 @@ def getAllUsersProfile():
     else:
         raise ValueError(u"Неопддерживаемая версия Windows %s" % wv)
     return result
+
+def getLocationInQt(locationType):
+    """
+
+    """
+    from PyQt4.QtGui import QDesktopServices
+    try:
+        key = {
+            "desktop": QDesktopServices.DesktopLocation,
+            "documents": QDesktopServices.DocumentsLocation,
+            "fonts": QDesktopServices.FontsLocation,
+            "applications": QDesktopServices.ApplicationsLocation,
+            "music": QDesktopServices.MusicLocation,
+            "movies": QDesktopServices.MoviesLocation,
+            "pictures": QDesktopServices.PicturesLocation,
+            "temp": QDesktopServices.TempLocation,
+            "home": QDesktopServices.HomeLocation,
+            "data": QDesktopServices.DataLocation,
+            "cache": QDesktopServices.CacheLocation,
+        }[locationType]
+    except KeyError:
+        raise KeyError(u"Передан некорректный параметр в метод getLocationInQt(locationType)")
+    return unicode(QDesktopServices.storageLocation(key))

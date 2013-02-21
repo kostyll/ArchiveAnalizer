@@ -17,25 +17,24 @@ class main(QtGui.QMainWindow):
     """
     Класс основной формы
     """
-
-    cfgAppName = "IntellectArchiveAnalizer"  # Имя приложения для создания рабочих папок.
+    cfgVersion = "2.0.1"
+    cfgYaer = "2013"
     cfgDefaultFileName = "cfg_default.yaml"  # Имя файла конфигурации по умолчанию.
     cfgUserFilename = "cfg_user.yaml"  # Имя фалйа конфигурации пользоателя по умолчанию.
 
-
-    tableName = "archiv"  # Имя таблицы.
-    cacheDir = "cache"  # Директория для кэширования.
-    outDir = "out"  # Диретория для выходных файлов.
-    cacheFile = ""  # Имя фафйла с резервной копией базы данных.
+#    tableName = "archiv"  # Имя таблицы.
+#    cacheDir = "cache"  # Директория для кэширования.
+#    outDir = "out"  # Диретория для выходных файлов.
+#    cacheFile = ""  # Имя фафйла с резервной копией базы данных.
     isProcess = False  # Программа находится в процессе работы.
     # Иконка заголовка окнна:
-    configDefault = {  # Конфигурация программы по умолчанию.
-        "report_in_day": True,
-        "report_cam_in_day": True,
-        "report_cam_in_hour": True,
-        "backup_file": "",
-        "exec_after_create": True,
-    }
+#    configDefault = {  # Конфигурация программы по умолчанию.
+#        "report_in_day": True,
+#        "report_cam_in_day": True,
+#        "report_cam_in_hour": True,
+#        "backup_file": "",
+#        "exec_after_create": True,
+#    }
 
     def __init__(self):
         QtGui.QMainWindow.__init__(self)
@@ -49,106 +48,117 @@ class main(QtGui.QMainWindow):
         self.ui.pushButton_3.clicked.connect(self.clickProcess)  # Начало процесса создания отчетов.
         self.ui.pushButton_4.clicked.connect(self.clickClearFileLine)  # Очистка поля выбора внешнего файла.
         self.ui.pushButton_5.clicked.connect(self.clickOpenOutFolder)  # Открытие папки с выходными файлами.
-
-        self.ui.action.triggered.connect(self.clickOpenOutFolder)  # Открытие папки с выходными файлами.
-
+        self.ui.action.triggered.connect(self.clickAbout)  # Информация о прогремме.
+        self.ui.action_Qt.triggered.connect(self.clickAboutQt)  # Информация о Qt.
         self.connect(self.threadManager, QtCore.SIGNAL("information(QString)"), self.addLogInform, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("progress(QString)"), self.progress, QtCore.Qt.QueuedConnection)
         self.connect(self.threadManager, QtCore.SIGNAL("started()"), lambda: self.formDisabled(True))
         self.connect(self.threadManager, QtCore.SIGNAL("finished()"), self.finishProcess)
 
-
-        # Конфигурация:
-        self.config = ksconfig.KsConfig(self.baseDir, "config.ini", self.configDefault, True)
-        self.configToForm()
-
-        self.cfg = lya.AttrDict.from_yaml(os.path.join(self.baseDir, self.cfgDefaultFileName))
-
-
-
-        # Создание необходимых для работы папок:
+        # Ищем конфиг по умолчанию в теущей папке (если нет завершаем работу программы). Ищем пользовательские настройки и
+        # наклаываем их на дефаултные.
         try:
-            if not os.path.exists("%s/%s" % (self.baseDir, self.outDir)):
-                os.mkdir("%s/%s" % (self.baseDir, self.outDir))
-            if not os.path.exists("%s/%s" % (self.baseDir, self.cacheDir)):
-                os.mkdir("%s/%s" % (self.baseDir, self.cacheDir))
+            self.cfg = lya.AttrDict.from_yaml(os.path.join(self.baseDir, self.cfgDefaultFileName))
+        except IOError, e:
+            self.errorMsgCritical(unicode(e.__str__(), "cp1251"))
+        else:
+            try:
+                self.cfg.update_yaml(os.path.join(ksenv.getLocalAppDataPath(), self.cfg.main.dir.app_dir, self.cfgUserFilename))
+            except IOError, e:
+                logging.error(u"Не удалось прочитать файл пользовательской конфигурации: %s" % unicode(e.__str__(), "cp1251"))
+                pass
+        self.configToForm()
+        # Создание рабочих папок.
+        # Кэш созраняется в %ALLUSERSPROFILE%, выходная директория создаётся в "моих документах".
+        try:
+            dirs = (
+                os.path.join(ksenv.getLocalAppDataPath(), self.cfg.main.dir.app_dir),
+                os.path.join(ksenv.getAllUsersProfile(), self.cfg.main.dir.app_dir),
+                os.path.join(ksenv.getLocationInQt("documents"), self.cfg.main.dir.app_dir),
+            )
+            for dir in dirs:
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
         except Exception, e:
-            ksqt.message(self, "error", u"Ошибка...", u"Невозможно создать директорию: %s" % unicode(e.__str__(), 'cp1251'))
-            sys.exit(1)
+            self.errorMsgCritical((u"Невозможно создать директорию.", unicode(e.__str__(), 'cp1251',)))
+
+    def clickAbout(self):
+        """
+        Информация о программе.
+        """
+        QtGui.QMessageBox.information(
+            self,
+            u"О программе...",
+u"""
+<b>Анализатор видео архива ПО «Интеллект» версии %s</b>
+<br>
+Автор: Стерликов К.С. @ %s
+""" % (self.cfgVersion, self.cfgYaer),
+            QtGui.QMessageBox.Information
+        )
+
+    def clickAboutQt(self):
+        """
+        Информация о программе.
+        """
+        QtGui.QMessageBox.aboutQt(self)
+
 
     def clickOpenCacheFolder(self):
         """
         Открыть папку с кэшем.
         """
-        path = "%s/%s" % (self.baseDir, self.cacheDir)
+        path = os.path.join(ksenv.getAllUsersProfile(), self.cfg.main.dir.app_dir)
         try:
             os.startfile(path)
         except Exception, e:
-            ksqt.message(self, "error", u"Ошибка...", u"Не удаётся открыть папку %s<br>%s" % (path, unicode(e.__str__(), "cp1251")))
+            print e
+            self.errorMsg((u"Не удаётся открыть папку с кэшем базы архива", unicode(e.__str__(), "cp1251"),))
 
     def clickOpenOutFolder(self):
         """
         Открыть папку с выходными файлами.
         """
-        path = "%s/%s" % (self.baseDir, self.outDir)
+        path = os.path.join(ksenv.getLocationInQt("documents"), self.cfg.main.dir.app_dir)
         try:
             os.startfile(path)
         except Exception, e:
-            ksqt.message(self, "error", u"Ошибка...", u"Не удаётся открыть папку %s<br>%s" % (path, unicode(e.__str__(), "cp1251")))
-
+            self.errorMsg((u"Не удаётся открыть папку с отчётами.", unicode(e.__str__(), "cp1251"),))
 
     def closeEvent(self, *args, **kwargs):
         """
         Переопределяем событие выхода из формы.
         """
         self.configToFile()
-        self.config.save()
         QtGui.QWidget.closeEvent(self, *args, **kwargs)
 
     def configToForm(self):
         """
         Установка параметров формы в зависимости от конфигурации.
         """
-        if self.config.get("report_in_day"):
-            self.ui.checkBox_2.setChecked(True)
-        else:
-            self.ui.checkBox_2.setChecked(False)
-        if self.config.get("report_cam_in_day"):
-            self.ui.checkBox.setChecked(True)
-        else:
-            self.ui.checkBox.setChecked(False)
-        if self.config.get("report_cam_in_hour"):
-            self.ui.checkBox_3.setChecked(True)
-        else:
-            self.ui.checkBox_3.setChecked(False)
-        if self.config.get("exec_after_create"):
-            self.ui.checkBox_4.setChecked(True)
-        else:
-            self.ui.checkBox_4.setChecked(False)
-        if self.config.get("backup_file") and os.path.exists(self.config.get("backup_file")):
-            self.ui.lineEdit.setText(self.config.get("backup_file"))
+        self.ui.checkBox_2.setChecked(self.cfg.main.report.in_day)
+        self.ui.checkBox.setChecked(self.cfg.main.report.cam_in_day)
+        self.ui.checkBox_3.setChecked(self.cfg.main.report.cam_in_hour)
+        self.ui.checkBox_4.setChecked(self.cfg.main.triggers.exec_after_create)
+        self.ui.checkBox_5.setChecked(self.cfg.main.triggers.each_create_new_cache)
+        if len(self.cfg.main.backup.file) and os.path.exists(self.cfg.main.backup.file):
+            self.ui.lineEdit.setText(self.cfg.main.backup.file)
 
     def configToFile(self):
         """
-        Сохранение текущего значения конфигурации на диск.
+        Сохранение и сохранение текущего значения конфигурации на диск.
         """
-        if self.ui.checkBox_2.checkState() == QtCore.Qt.Checked:
-            self.config.set("report_in_day", True)
-        else:
-            self.config.set("report_in_day", False)
-        if self.ui.checkBox.checkState() == QtCore.Qt.Checked:
-            self.config.set("report_cam_in_day", True)
-        else:
-            self.config.set("report_cam_in_day", False)
-        if self.ui.checkBox_3.checkState() == QtCore.Qt.Checked:
-            self.config.set("report_cam_in_hour", True)
-        else:
-            self.config.set("report_cam_in_hour", False)
-        if self.ui.checkBox_4.checkState() == QtCore.Qt.Checked:
-            self.config.set("exec_after_create", True)
-        else:
-            self.config.set("exec_after_create", False)
-        self.config.set("backup_file", unicode(self.ui.lineEdit.text()))
+        self.cfg.main.report.in_day = self.ui.checkBox_2.checkState() == QtCore.Qt.Checked
+        self.cfg.main.report.cam_in_day = self.ui.checkBox.checkState() == QtCore.Qt.Checked
+        self.cfg.main.report.cam_in_hour = self.ui.checkBox_3.checkState() == QtCore.Qt.Checked
+        self.cfg.main.triggers.exec_after_create = self.ui.checkBox_4.checkState() == QtCore.Qt.Checked
+        self.cfg.main.triggers.each_create_new_cache = self.ui.checkBox_5.checkState() == QtCore.Qt.Checked
+        self.cfg.main.backup.file = unicode(self.ui.lineEdit.text())
+        try:
+            f = open(os.path.join(ksenv.getLocalAppDataPath(), self.cfg.main.dir.app_dir, self.cfgUserFilename), "w")
+            self.cfg.dump(f)
+        except Exception, e:
+            self.errorMsg((u"Невозможно сохранить конфигурацию программы", unicode(e.__str__(), "cp1251"),))
 
     def progress(self, num):
         """
@@ -225,7 +235,7 @@ class main(QtGui.QMainWindow):
         """
         Диалог выбора файла с внешней базой данных.
         """
-        dirName = "%s/%s" % (self.baseDir, self.cacheDir)
+        dirName = os.path.join(ksenv.getAllUsersProfile(), self.cfg.main.dir.app_dir)
         fileName = QtGui.QFileDialog().getOpenFileName(self, u"Выберите .sql файл...", directory=dirName, filter="*.sql")
         if fileName:
             self.ui.lineEdit.setText(fileName)
@@ -241,39 +251,37 @@ class main(QtGui.QMainWindow):
             self.threadManager.chancel = True
             self.ui.pushButton_3.setDisabled(True)
         else:
-            i = self.addLogInform
-            w = self.addLogWarning
-            e = self.addLogError
-            c = self.addLogCommand
-            d = logging.debug
-            c(u"clear")
+            self.addLogCommand(u"clear")
             archDisks = ksitv.getArchiveDisks()  # Списки дисков с крхивами.
             if not archDisks:
-                w(u"Не найдены жёсткие диски с видео-архивами.")
-                ksqt.message(self, "warning", u"Внимание", u"Не найдены жёсткие диски с видео-архивами.")
+                self.addLogWarning(u"Не найдены жёсткие диски с видео-архивами.")
+                ksqt.message(self, "warning", u"Внимание...", u"Не найдены жёсткие диски с видео-архивами.")
             else:
-                i(u"Обнаружены диски с архивами:  %s" % (", ".join(["%s:" % item for item in archDisks])))
+                self.addLogInform(u"Обнаружены диски с архивами:  %s" % (", ".join(["%s:" % item for item in archDisks])))
                 if len(archDisks) > 1:
-                    w(u"Обнаружено, что видео архив расположен на нескольких жестких дисках: %s<br>что не поддерживается в текущей версии программы." % (", ".join(["%s:" % item for item in archDisks])))
-                    ksqt.message(self, "warning", u"Внимание", u"Обнаружено, что видео архив расположен на нескольких жестких дисках: %s\nчто не поддерживается в текущей версии программы." % (", ".join(["%s:" % item for item in archDisks])))
+                    self.addLogWarning(u"Обнаружено, что видео архив расположен на нескольких жестких дисках: %s<br>что не поддерживается в текущей версии программы." % (", ".join(["%s:" % item for item in archDisks])))
+                    ksqt.message(self, "warning", u"Внимание...", u"Обнаружено, что видео архив расположен на нескольких жестких дисках: %s\nчто не поддерживается в текущей версии программы." % (", ".join(["%s:" % item for item in archDisks])))
                 else:
                     # Чтение всех директорий из указанных папок.
                     archDisk = archDisks[0]  # Диск с архивом.
                     dirList = ksitv.getArchiveFolder(archDisk)  # Список папок в архиве.
                     if not dirList:
-                        w(u"Видео архив пуст.")
-                        ksqt.message(self, "inform", u"Информация", u"Видео архив пуст.")
+                        self.addLogWarning(u"Видео архив пуст.")
+                        ksqt.message(self, "inform", u"Информация...", u"Видео архив пуст.")
                     else:
                         # Запускаем менеджер обработки данных.
                         self.threadManager.initialize()
                         self.threadManager.archDisk = archDisk
                         self.threadManager.dirList = dirList
                         self.threadManager.logging = logging
+                        self.threadManager.cfg = self.cfg
                         self.threadManager.workDir = self.baseDir
-                        self.threadManager.tableName = self.tableName
-                        self.threadManager.cacheDir = self.cacheDir
-                        self.threadManager.outDir = self.outDir
-                        self.threadManager.cacheFile = self.cacheFile
+                        #self.threadManager.tableName = self.tableName
+                        #self.threadManager.cacheDir = self.cacheDir
+                        #self.threadManager.outDir = self.outDir
+
+                        if unicode(self.ui.lineEdit.text()) and os.path.exists(unicode(self.ui.lineEdit.text())):
+                            self.threadManager.cacheFile = unicode(self.ui.lineEdit.text())
                         if self.ui.checkBox_4.checkState() == QtCore.Qt.Checked:
                             self.threadManager.runAfterComplete = True
                         checked = 0  # Колличество выбранныз отчетов.
@@ -287,7 +295,7 @@ class main(QtGui.QMainWindow):
                             self.threadManager.report.append("cam_in_hour")
                             checked += 1
                         if not checked:
-                            ksqt.message(self, "warning", u"Внимание", u"Необходимо выбрать хотя бы один отчёт.")
+                            ksqt.message(self, "warning", u"Внимание...", u"Необходимо выбрать хотя бы один отчёт.")
                         else:
                             self.threadManager.start()
                             self.isProcess = True
@@ -307,6 +315,32 @@ class main(QtGui.QMainWindow):
                 self.addLogOk(u"<b>Выполнено!</b>")
         self.formDisabled(False)
         self.isProcess = False
+
+    def errorMsg(self, message):
+        """
+        Формирование отчёта об ошибке.
+        """
+        if isinstance(message, list) or isinstance(message, tuple):
+            logging.debug("ERROR: %s" % "; ".join(message))
+            message = u"<ul><li>%s</li></ul>" % u"</li><li>".join(message)
+        else:
+            logging.debug("ERROR: %s" % message)
+            message = u"<ul><li>%s</li></ul>" %  message
+        ksqt.message(self, "error", u"Ошибка...", u"В процессе работы программы произошли ошибки:%s" % message)
+
+    def errorMsgCritical(self, message):
+        """
+        Формирование отчёта об ошибке и выход из программы.
+        """
+        if isinstance(message, list) or isinstance(message, tuple):
+            logging.debug("CRITICAL: %s" % "; ".join(message))
+            message = u"<ul><li>%s</li></ul>" % u"</li><li>".join(message)
+        else:
+            logging.debug("CRITICAL: %s" % message)
+            message = u"<ul><li>%s</li></ul>" %  message
+        ksqt.message(self, "error", u"Ошибка...", u"В процессе работы программы произошли ошибки:%s<b>Работа программы остановлена!</b>" % message)
+        sys.exit(1)
+
 
 
 if __name__ == '__main__':

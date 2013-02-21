@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_main.ui'
 #
-# Created: Tue Feb 19 17:44:28 2013
+# Created: Thu Feb 21 17:13:51 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -70,7 +70,7 @@ class Ui_main(object):
         self.gridLayout_5.setMargin(3)
         self.gridLayout_5.setObjectName(_fromUtf8("gridLayout_5"))
         spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.gridLayout_5.addItem(spacerItem1, 2, 0, 1, 1)
+        self.gridLayout_5.addItem(spacerItem1, 3, 0, 1, 1)
         self.pushButton = QtGui.QPushButton(self.groupBox_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -88,17 +88,18 @@ class Ui_main(object):
         self.pushButton.setAutoDefault(False)
         self.pushButton.setFlat(False)
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
-        self.gridLayout_5.addWidget(self.pushButton, 0, 0, 1, 2)
+        self.gridLayout_5.addWidget(self.pushButton, 1, 0, 1, 2)
         self.pushButton_5 = QtGui.QPushButton(self.groupBox_2)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.pushButton_5.sizePolicy().hasHeightForWidth())
         self.pushButton_5.setSizePolicy(sizePolicy)
+        self.pushButton_5.setMinimumSize(QtCore.QSize(0, 24))
         self.pushButton_5.setLayoutDirection(QtCore.Qt.LeftToRight)
         self.pushButton_5.setIcon(icon1)
         self.pushButton_5.setObjectName(_fromUtf8("pushButton_5"))
-        self.gridLayout_5.addWidget(self.pushButton_5, 1, 0, 1, 2)
+        self.gridLayout_5.addWidget(self.pushButton_5, 0, 0, 1, 2)
         self.gridLayout.addWidget(self.groupBox_2, 0, 1, 1, 1)
         self.verticalLayout.addWidget(self.widget)
         self.widget_2 = QtGui.QWidget(self.centralwidget)
@@ -136,6 +137,9 @@ class Ui_main(object):
         self.pushButton_3.setFont(font)
         self.pushButton_3.setObjectName(_fromUtf8("pushButton_3"))
         self.gridLayout_4.addWidget(self.pushButton_3, 0, 1, 1, 1)
+        self.checkBox_5 = QtGui.QCheckBox(self.widget_3)
+        self.checkBox_5.setObjectName(_fromUtf8("checkBox_5"))
+        self.gridLayout_4.addWidget(self.checkBox_5, 2, 0, 1, 2)
         self.checkBox_4 = QtGui.QCheckBox(self.widget_3)
         self.checkBox_4.setChecked(True)
         self.checkBox_4.setObjectName(_fromUtf8("checkBox_4"))
@@ -164,7 +168,10 @@ class Ui_main(object):
         main.setStatusBar(self.statusbar)
         self.action = QtGui.QAction(main)
         self.action.setObjectName(_fromUtf8("action"))
+        self.action_Qt = QtGui.QAction(main)
+        self.action_Qt.setObjectName(_fromUtf8("action_Qt"))
         self.menuTop.addAction(self.action)
+        self.menuTop.addAction(self.action_Qt)
         self.menubar.addAction(self.menuTop.menuAction())
 
         self.retranslateUi(main)
@@ -182,9 +189,11 @@ class Ui_main(object):
         self.pushButton_2.setText(_translate("main", "Выбрать файл базы", None))
         self.pushButton_4.setText(_translate("main", "-", None))
         self.pushButton_3.setText(_translate("main", "Сформировать", None))
+        self.checkBox_5.setText(_translate("main", "каждый кэш сохранять в отдельный файл.", None))
         self.checkBox_4.setText(_translate("main", "открыть файл после окончания его формирования.", None))
         self.groupBox_3.setTitle(_translate("main", "Ход выполнения работ", None))
         self.menuTop.setTitle(_translate("main", "Справка", None))
         self.action.setText(_translate("main", "О программе", None))
+        self.action_Qt.setText(_translate("main", "О Qt", None))
 
 import iconres_rc

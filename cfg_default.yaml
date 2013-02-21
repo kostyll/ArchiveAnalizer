@@ -10,10 +10,10 @@ main:
   # прочие триггеры
   triggers:
     exec_after_create: True
+    each_create_new_cache: False
   # рабочие директории
   dir:
-    out: "out"
-    cache: "cache"
+    app_dir: "Intellect Archive Analizer"  # имя рабочих директорий программы
   # настройка БД
   db:
     base: ":memory:"

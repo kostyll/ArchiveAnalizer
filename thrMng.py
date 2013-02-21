@@ -4,22 +4,19 @@
 
 from PyQt4 import QtCore
 import sqlite3
-import Queue
-from kstools import ksitv, ksprocent, ksfs
+from kstools import ksitv, ksprocent, ksfs, ksenv
 import os
 import sys
 import xlwt
 import socket
 import sqlite3.dump
-
+import datetime
 
 
 class ThrMng(QtCore.QThread):
     """
     При возникновенни ошибки в процессе работы потока, заполняются переменные error и errorMessage.
     """
-
-    cfg = None  # Конфигурация программы.
 
     def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
@@ -29,21 +26,25 @@ class ThrMng(QtCore.QThread):
         """
         Очиска переменных для повторного использования.
         """
-        self.tableName = ""  # Имя таблицы.
-        self.cacheDir = ""  # Директория для кэширования.
-        self.outDir = ""  # Диретория для выходных файлов.
+        #self.tableName = ""  # Имя таблицы.
+        #self.cacheDir = ""  # Директория для кэширования.
+        #self.outDir = ""  # Диретория для выходных файлов.
+        self.postfixTime = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        self.postfixCache = 'cache_%s' % self.postfixTime  # Постфикс для кэша.
+        self.postfix = 'report_%s' % self.postfixTime  # Постфикс файла с отчётом.
         self.workDir = ""  # Рабочая директория.
         self.archDisk = ""  # Диск с видео архивом.
         self.dirList = []  # Список директорий с архиами.
         self.logging = None  # Ссылка на логирование системы.
         self.error = False  # Ключ ошибки в работе программы.
         self.errorMessage = u""  # Сообщение об ошибки.
-        self.sqlQueue = Queue.Queue()  # Очередь для добавления данных в БД.
         self.chancel = False  # Ключ принудительной остановки работы потока.
         self.report = []  # Списо отчетов.
         self.normalExit = False  # Ключ нормального выхода из потока.
         self.cacheFile = ""  # Файл из кэша.
         self.runAfterComplete = False  # Запустить после формирования отчета.
+        self.cfg = None  # Общая конфигурация.
+        self.dbConnect = None  # Подключение к базе данных.
 
     def errorMsg(self, message):
         """
@@ -102,17 +103,20 @@ class ThrMng(QtCore.QThread):
         except Exception:
             raise
 
-    def getDbFileNameBackup(self):
+    def getDbFileNameBackup(self, postFix=""):
         """
         Возвращает имя файла бэкаба база данных.
         """
-        return "%s/%s/%s_backup.sql" % (self.workDir, self.cacheDir, socket.gethostname())
+        if postFix:
+            return os.path.join(ksenv.getAllUsersProfile(), self.cfg.main.dir.app_dir, "%s_%s.sql" % (socket.gethostname().upper(), self.postfixCache))
+        else:
+            return os.path.join(ksenv.getAllUsersProfile(), self.cfg.main.dir.app_dir, "%s.sql" % socket.gethostname().upper())
 
-    def getReportXlsFileName(self, postFix=""):
+    def getReportXlsFileName(self, postFix):
         """
         Возвращает имя xls файла.
         """
-        return "%s/%s/%s.xls" % (self.workDir, self.outDir, socket.gethostname())
+        return os.path.join(ksenv.getLocationInQt("documents"), self.cfg.main.dir.app_dir, "%s_%s.xls" % (socket.gethostname().upper(), postFix))
 
     def getCamList(self, dbCursor):
         """
@@ -128,7 +132,7 @@ class ThrMng(QtCore.QThread):
                 %s
             GROUP BY
                 cam
-        """ % self.tableName
+        """ % self.cfg.main.db.table
         data = []
         try:
             for row in dbCursor.execute(sql):
@@ -145,7 +149,7 @@ class ThrMng(QtCore.QThread):
         Возвращает список всех дат с архивами.
         """
         result = []
-        sql = "SELECT date FROM %s GROUP BY date ORDER BY date" % self.tableName
+        sql = "SELECT date FROM %s GROUP BY date ORDER BY date" % self.cfg.main.db.table
         try:
             for row in dbCursor.execute(sql):
                 result.append(row[0])
@@ -159,7 +163,7 @@ class ThrMng(QtCore.QThread):
         Возвращает размер всез записей за все даты.
         """
         result = {}
-        sql = 'SELECT date, SUM(size) FROM %s GROUP BY date ORDER BY date' % self.tableName
+        sql = 'SELECT date, SUM(size) FROM %s GROUP BY date ORDER BY date' % self.cfg.main.db.table
         try:
             for row in dbCursor.execute(sql):
                 date, size = row
@@ -174,7 +178,7 @@ class ThrMng(QtCore.QThread):
         Возвращает список камер и размер записей за указанный час.
         """
         result = {}
-        sql = 'SELECT cam, SUM(size) FROM %s WHERE date="%s" AND hour=%s GROUP BY cam' % (self.tableName, date, hour)
+        sql = 'SELECT cam, SUM(size) FROM %s WHERE date="%s" AND hour=%s GROUP BY cam' % (self.cfg.main.db.table, date, hour)
         try:
             for row in dbCursor.execute(sql):
                 cam, size = row
@@ -189,7 +193,7 @@ class ThrMng(QtCore.QThread):
         Возвращает словарь с ключами в виде камер, и значением в виде общего размера в байтах за указанную дату.
         """
         result = {}
-        sql = 'SELECT cam, SUM(size) FROM %s WHERE date = "%s" GROUP BY cam' % (self.tableName, date)
+        sql = 'SELECT cam, SUM(size) FROM %s WHERE date = "%s" GROUP BY cam' % (self.cfg.main.db.table, date)
         try:
             for row in dbCursor.execute(sql):
                 cam, size = row
@@ -219,10 +223,9 @@ class ThrMng(QtCore.QThread):
             # Подключение к базе данных.
             self.logging.debug(u"Connect db.")
             try:
-                dbConnect =sqlite3.connect(":memory:")
-                #dbConnect =sqlite3.connect("xxx.sqlite")
+                dbConnect =sqlite3.connect(self.cfg.main.db.base)
                 dbCursor = dbConnect.cursor()
-                self.deleteTable(dbCursor, self.tableName)
+                self.deleteTable(dbCursor, self.cfg.main.db.table)
             except Exception, e:
                 self.errorMsg(u"Ошибка подключение к базе sqlite: %s" % unicode(e))
                 sys.exit()
@@ -236,12 +239,12 @@ class ThrMng(QtCore.QThread):
                         dbCursor.executescript(fContent)
                         dbConnect.commit()
                     except Exception, e:
-                        self.errorMsg(u"Ошибка создания бэкапа базы данных: %s\n%s" % (self.cacheFile, e))
+                        self.errorMsg(u"Ошибка востановелния бэкапа базы данных: %s\n%s" % (self.cacheFile, e))
                         sys.exit()
                     self.emit(QtCore.SIGNAL("information(QString)"), u"&nbsp;&nbsp;&nbsp;...восстановлено.")
                 else:
                     # Создание новой базы данных.
-                    self.createTable(dbCursor, self.tableName)
+                    self.createTable(dbCursor, self.cfg.main.db.table)
                     curProcent = 1  # Текущий процент выполненных действий.
                     oldProcent = curProcent  # Предыдущий процент (для уменьшения подачи заявлений на изменение процента)
                     self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
@@ -274,7 +277,7 @@ class ThrMng(QtCore.QThread):
                                             '%s'
                                         )
                                 """ % (
-                                    self.tableName,
+                                    self.cfg.main.db.table,
                                     fileFullPath,
                                     self.archDisk,
                                     ksitv.getDateFromPath(archPath),
@@ -303,12 +306,15 @@ class ThrMng(QtCore.QThread):
                         self.emit(QtCore.SIGNAL("information(QString)"), u"&nbsp;&nbsp;&nbsp;... создано.")
                         # Создание бэкапа базы данных:
                         self.emit(QtCore.SIGNAL("information(QString)"), u"Создание бэкапа базы данных на диск... ")
-                        self.logging.debug(u"START: DB backup")
+                        if self.cfg.main.triggers.each_create_new_cache:
+                            pathCache = self.getDbFileNameBackup(self.postfixCache)
+                        else:
+                            pathCache = self.getDbFileNameBackup()
+                        self.logging.debug(u"START: DB backup file %s" % pathCache)
                         try:
-                            path = self.getDbFileNameBackup()
-                            if not os.path.exists(os.path.dirname(path)):
-                                os.mkdir(os.path.dirname(path))
-                            with open(path, 'w') as f:
+                            if not os.path.exists(os.path.dirname(pathCache)):
+                                os.mkdir(os.path.dirname(pathCache))
+                            with open(pathCache, 'w') as f:
                                 for line in dbConnect.iterdump():
                                     f.write('%s\n' % line)
                         except Exception, e:
@@ -323,12 +329,12 @@ class ThrMng(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 wb = xlwt.Workbook()
                 # Создание директории для отчетов:
-                outDir = "%s/%s" % (self.workDir, self.outDir)
+                outDir = os.path.join(ksenv.getLocationInQt("documents"), self.cfg.main.dir.app_dir)
                 try:
                     if not os.path.exists(outDir):
                         os.mkdir(outDir)
                 except Exception, e:
-                    self.errorMsg(u"Ошибка создания директории \"%s\": %s" % (outDir, e))
+                    self.errorMsg(u"Ошибка создания директории \"%s\": %s" % (outDir, unicode(e.__str__(), 'cp1251')))
                     sys.exit()
                 if "all_day" in self.report: # Отчет за все камеры в день:
                     self.logging.debug(u"START: report all_day")
@@ -431,16 +437,16 @@ class ThrMng(QtCore.QThread):
                     curProcent = 99
                     self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 try:
-                    wb.save(self.getReportXlsFileName())
+                    wb.save(self.getReportXlsFileName(self.postfix))
                 except Exception, e:
-                    self.errorMsg(u"Ошибка сохранения файла: %s" % e)
+                    self.errorMsg(u"Ошибка сохранения файла: %s" % unicode(e.__str__(), 'cp1251'))
                     sys.exit()
                 curProcent = 100
                 self.emit(QtCore.SIGNAL("progress(QString)"), str(curProcent))
                 # Просмотреть отчёт:
                 if self.runAfterComplete:
                     try:
-                        os.startfile(self.getReportXlsFileName())
+                        os.startfile(self.getReportXlsFileName(self.postfix))
                     except Exception, e:
                         self.errorMsg(u"Ошибка запуска программы для просмотра результирующего файла: %s" % unicode(e.__str__(), "cp1251"))
                         sys.exit()
