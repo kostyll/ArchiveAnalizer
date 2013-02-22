@@ -6,13 +6,14 @@ SET installerDir=D:\Install\_pyinstaller-2.0
 SET upxDir=D:\Install\_upx308w
 SET outDir=D:\Install\ArchiveAnalizer\bin
 SET projectName=ArchiveAnalizer
+SET outName=IntellectArchiveAnalizer
 SET CurrentDir=%CD%
 SET console=noconsole
 SET one=onedir
 
 rmdir /S /Q %outDir%
 
-start /B /WAIT /D "%installerDir%" %pythonDir%\python.exe pyinstaller.py --%console% --%one% --out=%outDir% --name=%projectName% --version-file=%CurrentDir%\version.py --icon=%CurrentDir%\icon.ico %CurrentDir%\%projectName%.py
+start /B /WAIT /D "%installerDir%" %pythonDir%\python.exe pyinstaller.py --%console% --%one% --out=%outDir% --name=%outName% --version-file=%CurrentDir%\version.py --icon=%CurrentDir%\icon.ico %CurrentDir%\%projectName%.py
 
 ECHO.
 PAUSE

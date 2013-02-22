@@ -21,20 +21,7 @@ class main(QtGui.QMainWindow):
     cfgYaer = "2013"
     cfgDefaultFileName = "cfg_default.yaml"  # Имя файла конфигурации по умолчанию.
     cfgUserFilename = "cfg_user.yaml"  # Имя фалйа конфигурации пользоателя по умолчанию.
-
-#    tableName = "archiv"  # Имя таблицы.
-#    cacheDir = "cache"  # Директория для кэширования.
-#    outDir = "out"  # Диретория для выходных файлов.
-#    cacheFile = ""  # Имя фафйла с резервной копией базы данных.
     isProcess = False  # Программа находится в процессе работы.
-    # Иконка заголовка окнна:
-#    configDefault = {  # Конфигурация программы по умолчанию.
-#        "report_in_day": True,
-#        "report_cam_in_day": True,
-#        "report_cam_in_hour": True,
-#        "backup_file": "",
-#        "exec_after_create": True,
-#    }
 
     def __init__(self):
         QtGui.QMainWindow.__init__(self)

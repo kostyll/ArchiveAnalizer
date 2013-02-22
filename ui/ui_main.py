@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_main.ui'
 #
-# Created: Thu Feb 21 22:17:38 2013
+# Created: Fri Feb 22 11:03:49 2013
 #      by: PyQt4 UI code generator 4.9.6
 #
 # WARNING! All changes made in this file will be lost!
@@ -139,6 +139,7 @@ class Ui_main(object):
         self.pushButton_3.setObjectName(_fromUtf8("pushButton_3"))
         self.gridLayout_4.addWidget(self.pushButton_3, 0, 1, 1, 1)
         self.checkBox_5 = QtGui.QCheckBox(self.widget_3)
+        self.checkBox_5.setChecked(True)
         self.checkBox_5.setObjectName(_fromUtf8("checkBox_5"))
         self.gridLayout_4.addWidget(self.checkBox_5, 2, 0, 1, 2)
         self.checkBox_4 = QtGui.QCheckBox(self.widget_3)
@@ -186,17 +187,28 @@ class Ui_main(object):
     def retranslateUi(self, main):
         main.setWindowTitle(_translate("main", "Анализа архива", None))
         self.groupBox.setTitle(_translate("main", "Выбор отчётов", None))
+        self.checkBox.setToolTip(_translate("main", "Формируется отчет о каждой камере по дням. Результат выражается бегабайтах.", None))
         self.checkBox.setText(_translate("main", "каждая камера по дням", None))
+        self.checkBox_3.setToolTip(_translate("main", "Формируется отчет о каждой камере по часам за каждый день. Результат выражается бегабайтах.", None))
         self.checkBox_3.setText(_translate("main", "каждая камер по часам", None))
+        self.checkBox_2.setToolTip(_translate("main", "Формируется отчет о всех камера за каждый день. Результат выражается бегабайтах.", None))
         self.checkBox_2.setText(_translate("main", "отчет за день", None))
         self.groupBox_2.setTitle(_translate("main", "Данные", None))
+        self.pushButton.setToolTip(_translate("main", "Открыть папку с кэшами видео архивов.", None))
         self.pushButton.setText(_translate("main", "Кэш базы    ", None))
+        self.pushButton_5.setToolTip(_translate("main", "Открыть папку с созданными программой отчётами.", None))
         self.pushButton_5.setText(_translate("main", "Результаты", None))
-        self.pushButton_2.setText(_translate("main", "Выбрать файл базы", None))
+        self.lineEdit.setToolTip(_translate("main", "<html><head/><body><p>Путь к файлу кэша, который будет восстановлен.</p></body></html>", None))
+        self.pushButton_2.setToolTip(_translate("main", "<html><head/><body><p>Выбрать файл кэша предыдущего сбора информации об видео архиве.</p></body></html>", None))
+        self.pushButton_2.setText(_translate("main", "Выбрать файл кэша", None))
+        self.pushButton_4.setToolTip(_translate("main", "<html><head/><body><p>Отменить восстановелние базы из кэша.</p></body></html>", None))
         self.pushButton_4.setText(_translate("main", "-", None))
+        self.pushButton_3.setToolTip(_translate("main", "<html><head/><body><p>Начать анализ видео архива и формироваиня отчётов.</p></body></html>", None))
         self.pushButton_3.setWhatsThis(_translate("main", "<html><head/><body><p><br/></p></body></html>", None))
         self.pushButton_3.setText(_translate("main", "Сформировать", None))
+        self.checkBox_5.setToolTip(_translate("main", "<html><head/><body><p>Каждый раз, когда будет создаваться кэш видео архива, он будет сохраняться в уникальный файл.</p></body></html>", None))
         self.checkBox_5.setText(_translate("main", "каждый кэш сохранять в отдельный файл.", None))
+        self.checkBox_4.setToolTip(_translate("main", "<html><head/><body><p>Автоматически открывает отчёт после окончании его формирования.</p></body></html>", None))
         self.checkBox_4.setText(_translate("main", "открыть файл после окончания его формирования.", None))
         self.groupBox_3.setTitle(_translate("main", "Ход выполнения работ", None))
         self.menuTop.setTitle(_translate("main", "Справка", None))
